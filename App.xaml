@@ -1,9 +1,14 @@
 ﻿<Application x:Class="SqlIdeProject.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:SqlIdeProject"
+             
+             xmlns:localUtils="clr-namespace:SqlIdeProject.Utils"
+             
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        
+        <localUtils:BoolToStatusConverter x:Key="BoolToStatusConverter" />
+        <localUtils:BoolToBrushConverter x:Key="BoolToBrushConverter" />
+        
     </Application.Resources>
 </Application>

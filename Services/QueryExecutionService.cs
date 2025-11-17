@@ -16,7 +16,7 @@ namespace SqlIdeProject.Services
             {
                 command.Execute();
 
-                // Отримуємо результат з команди (поки що тільки для ExecuteQueryCommand)
+                // Отримуємо результат з команди 
                 if (command is ExecuteQueryCommand queryCommand)
                 {
                     // 2. Генеруємо подію про успішне завершення, передаючи результат

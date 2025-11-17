@@ -1,4 +1,4 @@
-﻿<Window x:Class="SqlIdeProject.MainWindow"
+﻿<Window x:Name="AppWindow" x:Class="SqlIdeProject.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -15,28 +15,54 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" BorderBrush="LightGray" BorderThickness="1" Padding="10">
+        <Border x:Name="ConnectionBorder" Grid.Row="0" BorderBrush="LightGray" BorderThickness="1" Padding="10">
             <StackPanel>
-                <TextBlock Text="Підключення до Бази Даних" FontWeight="Bold" FontSize="16"/>
+                <TextBlock x:Name="ConnectionTitle" Text="Підключення до Бази Даних" FontWeight="Bold" FontSize="16"/>
+                
+                <TextBlock x:Name="ProfileLoadLabel" Text="Завантажити профіль:" Margin="0,10,0,5"/>
+                <ComboBox x:Name="ProfileComboBox" SelectionChanged="ProfileComboBox_SelectionChanged" DisplayMemberPath="ProfileName" />
+
                 <Grid Margin="0,10,0,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-
-                    <TextBlock Text="Тип БД:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <TextBlock x:Name="DbTypeLabel" Text="Тип БД:" VerticalAlignment="Center" Margin="0,0,5,0"/>
                     <ComboBox x:Name="DbTypeComboBox" Grid.Column="1" SelectedIndex="0">
                         <ComboBoxItem Content="SQLite"/>
                         <ComboBoxItem Content="PostgreSQL"/>
-								<ComboBoxItem Content="MySQL"/>
-								<ComboBoxItem Content="Oracle"/>
+                        <ComboBoxItem Content="MySQL"/>
+                        <ComboBoxItem Content="Oracle"/>
                     </ComboBox>
-
+                </Grid>
+                
+                <TextBlock x:Name="ConnectionStringLabel" Text="Рядок підключення:" Margin="0,10,0,5"/>
+                <TextBox x:Name="ConnectionStringTextBox" FontFamily="Consolas"/>
+                
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <TextBox x:Name="ProfileNameTextBox" Grid.Column="0" Margin="0,0,10,0" Text="Назва профілю..."/>
+                    <Button x:Name="SaveProfileButton" Content="Зберегти" Grid.Column="1" Padding="10,5" Click="SaveProfileButton_Click"/>
                     <Button x:Name="ConnectButton" Content="Підключитись" Grid.Column="2" Padding="10,5" Click="ConnectButton_Click" Margin="10,0,0,0"/>
                 </Grid>
-                <TextBlock Text="Рядок підключення:" Margin="0,10,0,5"/>
-                <TextBox x:Name="ConnectionStringTextBox" Text="Data Source=main.sqlite" FontFamily="Consolas"/>
+
+                <StackPanel Orientation="Horizontal" Margin="0,15,0,0">
+                    <TextBlock x:Name="FontSizeLabel" Text="Розмір шрифту редактора:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <TextBox x:Name="EditorFontSizeTextBox" Width="50" Text="14"/>
+                    <Button x:Name="SaveSettingsButton" Content="Зберегти налаштування" Margin="10,0,0,0" Padding="5,2" Click="SaveSettingsButton_Click"/>
+                </StackPanel>
+                
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                    <TextBlock x:Name="ThemeLabel" Text="Тема:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <RadioButton x:Name="LightThemeRadioButton" Content="Світла" GroupName="Theme" Tag="Light" IsChecked="True" Checked="ThemeRadioButton_Checked"/>
+                    <RadioButton x:Name="DarkThemeRadioButton" Content="Темна" GroupName="Theme" Tag="Dark" Margin="10,0,0,0" Checked="ThemeRadioButton_Checked"/>
+                </StackPanel>
+                
             </StackPanel>
         </Border>
 
@@ -45,14 +71,14 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-
-            <TextBlock Text="Введіть SQL-запит:" FontWeight="Bold"/>
+            <TextBlock x:Name="QueryEditorLabel" Text="Введіть SQL-запит:" FontWeight="Bold"/>
             <avalonedit:TextEditor x:Name="QueryTextEditor" Grid.Row="1" Margin="0,5,0,0" Height="150" SyntaxHighlighting="SQL" ShowLineNumbers="True" FontFamily="Consolas" FontSize="14"/>
         </Grid>
          <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,185,0,0">
             <Button x:Name="ExecuteQueryButton" Content="Виконати запит (SELECT)" Padding="10,5" Click="ExecuteQueryButton_Click"/>
             <Button x:Name="ShowSchemaButton" Content="Показати схему" Margin="10,0,0,0" Padding="10,5" Click="ShowSchemaButton_Click"/>
             <Button x:Name="CompareSchemasButton" Content="Порівняти схеми (Тест)" Margin="10,0,0,0" Padding="10,5" Click="CompareSchemasButton_Click"/>
+            <Button x:Name="HistoryButton" Content="Історія" Margin="10,0,0,0" Padding="10,5" Click="HistoryButton_Click" Background="#FFFBFFA5" />
         </StackPanel>
 
         <DataGrid x:Name="ResultsDataGrid" Grid.Row="2" Margin="0,10,0,0" IsReadOnly="True"/>
