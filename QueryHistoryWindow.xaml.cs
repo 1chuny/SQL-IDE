@@ -6,18 +6,15 @@ namespace SqlIdeProject
 {
     public partial class QueryHistoryWindow : Window
     {
-        // Вікно має знати, звідки брати дані.
+    
         private readonly IQueryHistoryRepository _historyRepository;
 
-        // "Ін'єкція залежності": Ми вимагаємо, щоб той, хто створює
-        // це вікно, передав нам готовий репозиторій.
         public QueryHistoryWindow(IQueryHistoryRepository historyRepository)
         {
             InitializeComponent();
             _historyRepository = historyRepository;
         }
 
-        // Цей метод завантажить дані в ListView
         private void LoadHistory()
         {
             try
@@ -33,8 +30,6 @@ namespace SqlIdeProject
             }
         }
 
-        // Цей метод автоматично викличеться, коли вікно завантажиться
-        // (ми вказали це у XAML: Loaded="Window_Loaded")
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             LoadHistory();
