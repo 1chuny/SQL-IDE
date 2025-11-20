@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives; // Потрібно для DataGridColumnHeader
+using System.Windows.Controls.Primitives; 
 using System.Windows.Media;
 using SqlIdeProject.DataAccess.Repositories;
 using SqlIdeProject.DataAccess.Repositories.Sqlite;
@@ -16,7 +16,7 @@ namespace SqlIdeProject
 {
     public partial class MainWindow : Window
     {
-        // --- (всі ваші поля: _connectionService, _profileRepository тощо) ---
+        
         private readonly ConnectionService _connectionService;
         private readonly QueryExecutionService _queryExecutionService;
         private const string ActiveConnectionId = "main_active_connection";
@@ -95,7 +95,7 @@ namespace SqlIdeProject
             }
         }
         
-        // --- ОСЬ ВЕЛИКЕ ОНОВЛЕННЯ ---
+        
         private void ApplyTheme(string themeName)
         {
             // Визначаємо кольори
@@ -199,8 +199,8 @@ namespace SqlIdeProject
                 ResultsDataGrid.Background = Brushes.White;
                 ResultsDataGrid.Foreground = Brushes.Black;
                 ResultsDataGrid.RowBackground = Brushes.White;
-                ResultsDataGrid.ColumnHeaderStyle = null; // Скинути до дефолту
-                ResultsDataGrid.RowStyle = null; // Скинути до дефолту
+                ResultsDataGrid.ColumnHeaderStyle = null; 
+                ResultsDataGrid.RowStyle = null; 
             }
         }
         
@@ -223,8 +223,6 @@ namespace SqlIdeProject
                 }
             }
         }
-
-        // --- (Решта коду (LoadProfiles, SaveProfileButton_Click, ... аж до кінця) залишається без змін) ---
         
         private void LoadProfiles()
         {
@@ -360,7 +358,6 @@ namespace SqlIdeProject
                 StatusTextBlock.Text = "Помилка виконання";
             }
             
-            // Встановлюємо колір статус-бару
             ApplyTheme(DarkThemeRadioButton.IsChecked == true ? "Dark" : "Light");
             
             try
