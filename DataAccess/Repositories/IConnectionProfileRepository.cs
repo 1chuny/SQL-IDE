@@ -7,7 +7,6 @@ namespace SqlIdeProject.DataAccess.Repositories
     // і додаємо один новий, специфічний для профілів.
     public interface IConnectionProfileRepository : IRepository<ConnectionProfile>
     {
-        // Наприклад, метод для пошуку профілю за його назвою
         ConnectionProfile? GetByName(string name);
     }
 }

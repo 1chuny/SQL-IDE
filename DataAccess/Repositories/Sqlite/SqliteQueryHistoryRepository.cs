@@ -60,7 +60,6 @@ namespace SqlIdeProject.DataAccess.Repositories.Sqlite
             return history;
         }
 
-        // --- Поки що не реалізовано ---
         public IEnumerable<QueryHistory> GetHistoryForProfile(int profileId)
         {
             throw new NotImplementedException();

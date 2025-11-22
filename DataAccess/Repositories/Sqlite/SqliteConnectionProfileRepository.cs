@@ -1,12 +1,12 @@
 // File: DataAccess/Repositories/Sqlite/SqliteConnectionProfileRepository.cs
 using Microsoft.Data.Sqlite;
 using SqlIdeProject.Models.Internal;
-using SqlIdeProject.Services; // Потрібно для ConnectionString
+using SqlIdeProject.Services; 
 using System.Collections.Generic;
 
 namespace SqlIdeProject.DataAccess.Repositories.Sqlite
 {
-    // Цей клас реалізує наш "контракт" (інтерфейс)
+    // Цей клас реалізує наш інтерфейс
     public class SqliteConnectionProfileRepository : IConnectionProfileRepository
     {
         // Ми беремо рядок підключення з нашого сервісу
@@ -57,8 +57,6 @@ namespace SqlIdeProject.DataAccess.Repositories.Sqlite
             return profiles;
         }
 
-        // Ми поки що не будемо реалізовувати всі методи,
-        // щоб не писати забагато коду
         public ConnectionProfile? GetByName(string name)
          {
             ConnectionProfile? profile = null;

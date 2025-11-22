@@ -45,13 +45,13 @@ namespace SqlIdeProject.DataAccess.Drivers
             }
         }
 
-        // Получение схемы для MySQL (используем information_schema)
+        // Отримання схеми для MySQL (используем information_schema)
         public SchemaRoot GetSchema()
         {
             if (_connection == null) throw new InvalidOperationException("Not connected to database.");
             var schema = new SchemaRoot();
 
-            // 1. Получаем таблицы для текущей базы данных
+            // 1. Отримуєм таблиці для поточної бази даних
             string tablesQuery = $"SELECT table_name FROM information_schema.tables WHERE table_schema = '{_connection.Database}' ORDER BY table_name;";
             var tablesTable = ExecuteQuery(tablesQuery);
 
@@ -60,7 +60,7 @@ namespace SqlIdeProject.DataAccess.Drivers
                 string tableName = row["table_name"].ToString()!;
                 var tableElement = new TableElement(tableName);
 
-                // 2. Для каждой таблицы получаем ее столбцы
+                // 2. Для кожної таблиці отримуємо стовбці
                 string columnsQuery = $"SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '{tableName}' AND table_schema = '{_connection.Database}' ORDER BY ordinal_position;";
                 var columnsTable = ExecuteQuery(columnsQuery);
 

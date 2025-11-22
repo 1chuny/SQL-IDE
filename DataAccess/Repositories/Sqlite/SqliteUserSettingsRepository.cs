@@ -29,7 +29,6 @@ namespace SqlIdeProject.DataAccess.Repositories.Sqlite
                 connection.Open();
                 var command = connection.CreateCommand();
                 
-                // "UPSERT": Оновити запис, якщо він існує, або вставити, якщо ні.
                 command.CommandText = "INSERT OR REPLACE INTO UserSettings (SettingKey, SettingValue) " +
                                       "VALUES ($key, $value)";
                 

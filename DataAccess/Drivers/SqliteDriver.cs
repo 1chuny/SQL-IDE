@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace SqlIdeProject.DataAccess.Drivers
 {
-    // КОНКРЕТНА РЕАЛІЗАЦІЯ: Драйвер для роботи з SQLite
+    
     public class SqliteDriver : IDatabaseDriver
     {
         private SqliteConnection? _connection;

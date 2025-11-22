@@ -1,6 +1,7 @@
 ﻿using SqlIdeProject.Commands;
 using SqlIdeProject.Patterns.Visitor;
 using SqlIdeProject.Services;
+using SqlIdeProject.Utils;
 using System;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,7 @@ using System.Windows.Media;
 using SqlIdeProject.DataAccess.Repositories;
 using SqlIdeProject.DataAccess.Repositories.Sqlite;
 using SqlIdeProject.Models.Internal;
+
 
 namespace SqlIdeProject
 {
@@ -31,8 +33,23 @@ namespace SqlIdeProject
         public MainWindow()
         {
             InternalDatabaseService.InitializeDatabase();
-            InitializeComponent();
-            
+				InitializeComponent();
+
+				try
+            {
+                SqlHighlightingHelper.Register();
+                var highlighting = ICSharpCode.AvalonEdit.Highlighting.HighlightingManager.Instance.GetDefinition("CustomSQL");
+                
+                if (highlighting != null)
+                {
+                    QueryTextEditor.SyntaxHighlighting = highlighting;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Помилка завантаження підсвітки синтаксису: {ex.Message}", "Увага", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+				
             _connectionService = ConnectionService.Instance;
             _queryExecutionService = new QueryExecutionService();
             _profileRepository = new SqliteConnectionProfileRepository();
@@ -45,7 +62,6 @@ namespace SqlIdeProject
             LoadSettings(); 
         }
 
-        // --- МЕТОДИ ДЛЯ НАЛАШТУВАНЬ (ШРИФТ + ТЕМА) ---
         
         private void LoadSettings()
         {
@@ -60,7 +76,7 @@ namespace SqlIdeProject
                 
                 string? theme = _settingsRepository.GetSetting(ThemeSettingKey);
                 string themeName = theme ?? "Light";
-                ApplyTheme(themeName); 
+                ThemeHelper.ApplyTheme(this, themeName);
                 
                 if (themeName == "Dark")
                     DarkThemeRadioButton.IsChecked = true;
@@ -95,115 +111,6 @@ namespace SqlIdeProject
             }
         }
         
-        
-        private void ApplyTheme(string themeName)
-        {
-            // Визначаємо кольори
-            var darkBg = new SolidColorBrush(Color.FromRgb(45, 45, 48));
-            var darkInputBg = new SolidColorBrush(Color.FromRgb(60, 60, 60));
-            var lightFg = Brushes.Gainsboro;
-            var lightFgTitle = Brushes.White;
-
-            if (themeName == "Dark")
-            {
-                // Вікно та Статус
-                AppWindow.Background = darkBg;
-                StatusTextBlock.Foreground = lightFg;
-                
-                // Рамка
-                ConnectionBorder.BorderBrush = Brushes.DarkGray;
-
-                // Усі Текстові Метки (TextBlock)
-                ConnectionTitle.Foreground = lightFgTitle;
-                ProfileLoadLabel.Foreground = lightFg;
-                DbTypeLabel.Foreground = lightFg;
-                ConnectionStringLabel.Foreground = lightFg;
-                FontSizeLabel.Foreground = lightFg;
-                ThemeLabel.Foreground = lightFg;
-                QueryEditorLabel.Foreground = lightFgTitle;
-                
-                // Перемикачі (RadioButton)
-                LightThemeRadioButton.Foreground = lightFg;
-                DarkThemeRadioButton.Foreground = lightFg;
-
-                // Поля вводу (TextBox)
-                ConnectionStringTextBox.Background = darkInputBg;
-                ConnectionStringTextBox.Foreground = lightFg;
-                ProfileNameTextBox.Background = darkInputBg;
-                ProfileNameTextBox.Foreground = lightFg;
-                EditorFontSizeTextBox.Background = darkInputBg;
-                EditorFontSizeTextBox.Foreground = lightFg;
-
-                // Списки (ComboBox)
-                ProfileComboBox.Background = darkInputBg;
-                DbTypeComboBox.Background = darkInputBg;
-
-                // Редактор коду AvalonEdit
-                QueryTextEditor.Background = darkInputBg;
-                QueryTextEditor.Foreground = lightFg;
-
-                // Таблиця результатів DataGrid
-                ResultsDataGrid.Background = darkInputBg;
-                ResultsDataGrid.Foreground = lightFg;
-                ResultsDataGrid.RowBackground = darkInputBg;
-                
-                // Стиль для заголовків DataGrid
-                var headerStyle = new Style(typeof(DataGridColumnHeader));
-                headerStyle.Setters.Add(new Setter(BackgroundProperty, darkBg));
-                headerStyle.Setters.Add(new Setter(ForegroundProperty, lightFgTitle));
-                ResultsDataGrid.ColumnHeaderStyle = headerStyle;
-                
-                // Стиль для рядків DataGrid
-                var rowStyle = new Style(typeof(DataGridRow));
-                rowStyle.Setters.Add(new Setter(BackgroundProperty, darkInputBg));
-                rowStyle.Setters.Add(new Setter(ForegroundProperty, lightFg));
-                ResultsDataGrid.RowStyle = rowStyle;
-            }
-            else // "Light"
-            {
-                // Повертаємо все до стандартних кольорів
-                AppWindow.Background = Brushes.White;
-                StatusTextBlock.Foreground = Brushes.Black;
-                ConnectionBorder.BorderBrush = Brushes.LightGray;
-
-                // Метки
-                ConnectionTitle.Foreground = Brushes.Black;
-                ProfileLoadLabel.Foreground = Brushes.Black;
-                DbTypeLabel.Foreground = Brushes.Black;
-                ConnectionStringLabel.Foreground = Brushes.Black;
-                FontSizeLabel.Foreground = Brushes.Black;
-                ThemeLabel.Foreground = Brushes.Black;
-                QueryEditorLabel.Foreground = Brushes.Black;
-                
-                // Перемикачі
-                LightThemeRadioButton.Foreground = Brushes.Black;
-                DarkThemeRadioButton.Foreground = Brushes.Black;
-
-                // Поля вводу
-                ConnectionStringTextBox.Background = Brushes.White;
-                ConnectionStringTextBox.Foreground = Brushes.Black;
-                ProfileNameTextBox.Background = Brushes.White;
-                ProfileNameTextBox.Foreground = Brushes.Black;
-                EditorFontSizeTextBox.Background = Brushes.White;
-                EditorFontSizeTextBox.Foreground = Brushes.Black;
-
-                // Списки
-                ProfileComboBox.Background = Brushes.White;
-                DbTypeComboBox.Background = Brushes.White;
-
-                // Редактор
-                QueryTextEditor.Background = Brushes.White;
-                QueryTextEditor.Foreground = Brushes.Black;
-                
-                // Таблиця
-                ResultsDataGrid.Background = Brushes.White;
-                ResultsDataGrid.Foreground = Brushes.Black;
-                ResultsDataGrid.RowBackground = Brushes.White;
-                ResultsDataGrid.ColumnHeaderStyle = null; 
-                ResultsDataGrid.RowStyle = null; 
-            }
-        }
-        
         private void ThemeRadioButton_Checked(object sender, RoutedEventArgs e)
         {
             if (_settingsRepository == null) return; 
@@ -211,7 +118,7 @@ namespace SqlIdeProject
             if (sender is RadioButton rb && rb.IsChecked == true)
             {
                 string themeName = rb.Tag.ToString() ?? "Light";
-                ApplyTheme(themeName);
+                ThemeHelper.ApplyTheme(this, themeName);
                 
                 try
                 {
@@ -317,7 +224,7 @@ namespace SqlIdeProject
                 IdeGrid.IsEnabled = true; 
                 StatusTextBlock.Text = $"Підключено до {dbType}. Готовий.";
                 // Застосовуємо колір до статус-бару при підключенні
-                ApplyTheme(DarkThemeRadioButton.IsChecked == true ? "Dark" : "Light");
+                ThemeHelper.ApplyTheme(this, DarkThemeRadioButton.IsChecked == true ? "Dark" : "Light");
             }
             catch (Exception ex)
             {
@@ -358,7 +265,7 @@ namespace SqlIdeProject
                 StatusTextBlock.Text = "Помилка виконання";
             }
             
-            ApplyTheme(DarkThemeRadioButton.IsChecked == true ? "Dark" : "Light");
+            ThemeHelper.ApplyTheme(this, DarkThemeRadioButton.IsChecked == true ? "Dark" : "Light");
             
             try
             {
@@ -388,58 +295,30 @@ namespace SqlIdeProject
         {
             try
             {
+                // Отримуємо поточне з'єднання
                 var connectionManager = _connectionService.GetOrCreateConnection(ActiveConnectionId, "", "");
+                
+                // Отримуємо схему
                 var schema = connectionManager.GetSchema();
-                var visitor = new SchemaTextRendererVisitor();
-                schema.Accept(visitor);
-                MessageBox.Show(visitor.GetResult(), "Схема Бази Даних");
+                
+                // ВІДКРИВАЄМО НОВЕ ВІКНО З ДЕРЕВОМ
+                var viewer = new SchemaViewerWindow(schema);
+                viewer.Owner = this;
+                viewer.ShowDialog();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Помилка отримання схеми: {ex.Message}", "Помилка", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Помилка отримання схеми: {ex.Message}. Переконайтесь, що ви підключені.", "Помилка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
         private void CompareSchemasButton_Click(object sender, RoutedEventArgs e)
         {
-             try
-            {
-                var (schema1, schema2) = CreateTestSchemasForComparison();
-                var visitor = new SchemaComparisonVisitor(schema2);
-                schema1.Accept(visitor);
-                var resultText = new StringBuilder();
-                resultText.AppendLine("Результати порівняння:");
-                if (visitor.Differences.Count <= 1)
-                {
-                    resultText.AppendLine("Відмінностей не знайдено.");
-                }
-                else
-                {
-                    visitor.Differences.ForEach(d => resultText.AppendLine(d));
-                }
-                MessageBox.Show(resultText.ToString(), "Порівняння Схем");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Помилка порівняння схем: {ex.Message}", "Помилка", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            // Відкриваємо вікно, де користувач сам вибере, що порівнювати
+            var compareWindow = new SchemaCompareWindow();
+            compareWindow.Owner = this;
+            compareWindow.ShowDialog();
         }
 
-        private (Models.Schema.SchemaRoot, Models.Schema.SchemaRoot) CreateTestSchemasForComparison()
-        {
-            var conn1 = _connectionService.GetOrCreateConnection("db1_compare", "SQLite", "Data Source=db1.sqlite");
-            conn1.RunCommand("DROP TABLE IF EXISTS Products;");
-            conn1.RunCommand("DROP TABLE IF EXISTS Customers;");
-            conn1.RunCommand("CREATE TABLE Products (Id INT, Name TEXT, Price REAL);");
-            conn1.RunCommand("CREATE TABLE Customers (Id INT, FullName TEXT);");
-            var schema1 = conn1.GetSchema();
-            var conn2 = _connectionService.GetOrCreateConnection("db2_compare", "SQLite", "Data Source=db2.sqlite");
-            conn2.RunCommand("DROP TABLE IF EXISTS Products;");
-            conn2.RunCommand("DROP TABLE IF EXISTS Orders;");
-            conn2.RunCommand("CREATE TABLE Products (Id INTEGER, Name VARCHAR, Quantity INT);");
-            conn2.RunCommand("CREATE TABLE Orders (OrderId INT);");
-            var schema2 = conn2.GetSchema();
-            return (schema1, schema2);
-        }
     }
 }
