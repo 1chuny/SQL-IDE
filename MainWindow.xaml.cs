@@ -1,72 +1,79 @@
 ﻿using SqlIdeProject.Commands;
-using SqlIdeProject.Patterns.Visitor;
 using SqlIdeProject.Services;
 using SqlIdeProject.Utils;
-using System;
-using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives; 
 using System.Windows.Media;
 using SqlIdeProject.DataAccess.Repositories;
 using SqlIdeProject.DataAccess.Repositories.Sqlite;
 using SqlIdeProject.Models.Internal;
 
-
 namespace SqlIdeProject
 {
+    /// <summary>
+    /// Головне вікно додатку. Відповідає за взаємодію з користувачем (UI Layer).
+    /// Реалізує роль Клієнта для патернів Singleton, Command та Observer.
+    /// </summary>
     public partial class MainWindow : Window
     {
+        // --- СЕРВІСИ ТА МЕНЕДЖЕРИ ---
+        private readonly ConnectionService _connectionService; // Singleton для керування з'єднаннями
+        private readonly QueryExecutionService _queryExecutionService; // Сервіс виконання команд (Observer Publisher)
+        private const string ActiveConnectionId = "main_active_connection"; // ID для поточного активного з'єднання
         
-        private readonly ConnectionService _connectionService;
-        private readonly QueryExecutionService _queryExecutionService;
-        private const string ActiveConnectionId = "main_active_connection";
-        private readonly IConnectionProfileRepository _profileRepository;
-        private readonly IQueryHistoryRepository _historyRepository;
-        private readonly IUserSettingsRepository _settingsRepository; 
-        private ConnectionProfile? _activeProfile;
+        // --- РЕПОЗИТОРІЇ (Патерн Repository) ---
+        private readonly IConnectionProfileRepository _profileRepository; // Доступ до збережених профілів
+        private readonly IQueryHistoryRepository _historyRepository;    // Доступ до історії запитів
+        private readonly IUserSettingsRepository _settingsRepository;   // Доступ до налаштувань (тема, шрифт)
+
+        // --- СТАН UI ---
+        private ConnectionProfile? _activeProfile; // Зберігає профіль, який зараз використовується
+        
+        // --- КЛЮЧІ НАЛАШТУВАНЬ ---
         private const string ThemeSettingKey = "AppTheme";
         private const string FontSizeSettingKey = "EditorFontSize";
 
 
         public MainWindow()
         {
+            // 1. Ініціалізація внутрішньої бази даних (SQLite) для налаштувань
             InternalDatabaseService.InitializeDatabase();
-				InitializeComponent();
+            
+            InitializeComponent();
 
-				try
-            {
-                SqlHighlightingHelper.Register();
-                var highlighting = ICSharpCode.AvalonEdit.Highlighting.HighlightingManager.Instance.GetDefinition("CustomSQL");
-                
-                if (highlighting != null)
-                {
-                    QueryTextEditor.SyntaxHighlighting = highlighting;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Помилка завантаження підсвітки синтаксису: {ex.Message}", "Увага", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-				
+            // 2. Налаштування підсвітки синтаксису SQL для редактора AvalonEdit
+            SqlHighlightingHelper.Register();
+            QueryTextEditor.SyntaxHighlighting = ICSharpCode.AvalonEdit.Highlighting.HighlightingManager.Instance.GetDefinition("CustomSQL");
+
+            // 3. Ініціалізація сервісів (Singleton) та бізнес-логіки
             _connectionService = ConnectionService.Instance;
             _queryExecutionService = new QueryExecutionService();
+            
+            // 4. Ініціалізація репозиторіїв
             _profileRepository = new SqliteConnectionProfileRepository();
             _historyRepository = new SqliteQueryHistoryRepository();
             _settingsRepository = new SqliteUserSettingsRepository();
             
+            // 5. Підписка на подію завершення запиту (Патерн Observer)
             _queryExecutionService.QueryCompleted += OnQueryExecutionCompleted;
             
+            // 6. Завантаження початкових даних в UI
             LoadProfiles();
             LoadSettings(); 
         }
 
+        // ============================================================
+        //      РОЗДІЛ: НАЛАШТУВАННЯ (ТЕМА ТА ШРИФТ)
+        // ============================================================
         
+        /// <summary>
+        /// Завантажує збережені налаштування з БД та застосовує їх до інтерфейсу.
+        /// </summary>
         private void LoadSettings()
         {
             try
             {
+                // Завантаження розміру шрифту
                 string? fontSize = _settingsRepository.GetSetting(FontSizeSettingKey);
                 if (!string.IsNullOrEmpty(fontSize) && double.TryParse(fontSize, out double size))
                 {
@@ -74,10 +81,14 @@ namespace SqlIdeProject
                     EditorFontSizeTextBox.Text = fontSize;
                 }
                 
+                // Завантаження теми
                 string? theme = _settingsRepository.GetSetting(ThemeSettingKey);
-                string themeName = theme ?? "Light";
-                ThemeHelper.ApplyTheme(this, themeName);
+                string themeName = theme ?? "Light"; // За замовчуванням світла
                 
+                // Використання хелпера для застосування стилів
+                ThemeHelper.ApplyTheme(this, themeName); 
+                
+                // Оновлення стану перемикачів
                 if (themeName == "Dark")
                     DarkThemeRadioButton.IsChecked = true;
                 else
@@ -89,6 +100,9 @@ namespace SqlIdeProject
             }
         }
         
+        /// <summary>
+        /// Обробник кнопки "Зберегти налаштування".
+        /// </summary>
         private void SaveSettingsButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -96,7 +110,9 @@ namespace SqlIdeProject
                 string fontSizeString = EditorFontSizeTextBox.Text;
                 if (double.TryParse(fontSizeString, out double size) && size > 5 && size < 40)
                 {
+                    // Зберігаємо в БД через репозиторій
                     _settingsRepository.SaveSetting(FontSizeSettingKey, fontSizeString);
+                    // Застосовуємо зміни одразу
                     QueryTextEditor.FontSize = size;
                     MessageBox.Show("Налаштування збережено!", "Успіх", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
@@ -111,13 +127,18 @@ namespace SqlIdeProject
             }
         }
         
+        /// <summary>
+        /// Обробник зміни перемикача теми. Миттєво застосовує та зберігає нову тему.
+        /// </summary>
         private void ThemeRadioButton_Checked(object sender, RoutedEventArgs e)
         {
-            if (_settingsRepository == null) return; 
+            if (_settingsRepository == null) return; // Захист від виклику під час ініціалізації
 
             if (sender is RadioButton rb && rb.IsChecked == true)
             {
                 string themeName = rb.Tag.ToString() ?? "Light";
+                
+                // Застосовуємо тему через допоміжний клас
                 ThemeHelper.ApplyTheme(this, themeName);
                 
                 try
@@ -130,6 +151,10 @@ namespace SqlIdeProject
                 }
             }
         }
+
+        // ============================================================
+        //      РОЗДІЛ: ПРОФІЛІ ПІДКЛЮЧЕННЯ
+        // ============================================================
         
         private void LoadProfiles()
         {
@@ -150,12 +175,14 @@ namespace SqlIdeProject
             {
                 string profileName = ProfileNameTextBox.Text;
                 
+                // Валідація
                 if (string.IsNullOrWhiteSpace(profileName) || profileName == "Назва профілю...")
                 {
                     MessageBox.Show("Будь ласка, введіть коректну назву профілю.", "Помилка валідації", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
                 
+                // Перевірка на унікальність
                 var existingProfile = _profileRepository.GetByName(profileName);
                 if (existingProfile != null)
                 {
@@ -173,7 +200,7 @@ namespace SqlIdeProject
                 _profileRepository.Add(newProfile);
                 
                 MessageBox.Show("Профіль збережено!");
-                LoadProfiles(); 
+                LoadProfiles(); // Оновлюємо список у ComboBox
                 ProfileNameTextBox.Text = "Назва профілю...";
             }
             catch (Exception ex)
@@ -182,6 +209,9 @@ namespace SqlIdeProject
             }
         }
 
+        /// <summary>
+        /// Автоматичне заповнення полів при виборі профілю зі списку.
+        /// </summary>
         private void ProfileComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (ProfileComboBox.SelectedItem is ConnectionProfile selectedProfile)
@@ -189,6 +219,7 @@ namespace SqlIdeProject
                 ConnectionStringTextBox.Text = selectedProfile.ConnectionString;
                 ProfileNameTextBox.Text = selectedProfile.ProfileName;
                 
+                // Встановлення правильного типу БД у ComboBox
                 foreach (ComboBoxItem item in DbTypeComboBox.Items)
                 {
                     if (item.Content?.ToString() == selectedProfile.DatabaseType)
@@ -201,18 +232,27 @@ namespace SqlIdeProject
             }
         }
         
+        // ============================================================
+        //      РОЗДІЛ: ОСНОВНІ ФУНКЦІЇ IDE
+        // ============================================================
+        
+        /// <summary>
+        /// Встановлює з'єднання з базою даних через сервіс.
+        /// </summary>
         private void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
             var selectedDbItem = DbTypeComboBox.SelectedItem as ComboBoxItem;
             if (selectedDbItem == null) return;
             string dbType = selectedDbItem.Content?.ToString() ?? "SQLite";
             string connectionString = ConnectionStringTextBox.Text;
+            
             if (string.IsNullOrWhiteSpace(connectionString))
             {
                 MessageBox.Show("Рядок підключення не може бути порожнім.", "Попередження", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
+            // Якщо параметри змінені вручну, скидаємо активний профіль
             if (ProfileComboBox.SelectedItem == null || ((ConnectionProfile)ProfileComboBox.SelectedItem).ConnectionString != connectionString)
             {
                 _activeProfile = null; 
@@ -220,10 +260,16 @@ namespace SqlIdeProject
 
             try
             {
+                // 1. Відключаємо старе з'єднання
+                _connectionService.Disconnect(ActiveConnectionId);
+
+                // 2. Створюємо нове з'єднання через Singleton
                 _connectionService.GetOrCreateConnection(ActiveConnectionId, dbType, connectionString);
-                IdeGrid.IsEnabled = true; 
+                
+                IdeGrid.IsEnabled = true; // Розблоковуємо редактор
                 StatusTextBlock.Text = $"Підключено до {dbType}. Готовий.";
-                // Застосовуємо колір до статус-бару при підключенні
+                
+                // Оновлюємо тему (щоб статус-бар мав правильний колір)
                 ThemeHelper.ApplyTheme(this, DarkThemeRadioButton.IsChecked == true ? "Dark" : "Light");
             }
             catch (Exception ex)
@@ -235,6 +281,9 @@ namespace SqlIdeProject
             }
         }
 
+        /// <summary>
+        /// Створює команду та передає її на виконання. (Патерн Command)
+        /// </summary>
         private void ExecuteQueryButton_Click(object sender, RoutedEventArgs e)
         {
             string query = QueryTextEditor.Text;
@@ -242,8 +291,13 @@ namespace SqlIdeProject
             try
             {
                 var connectionManager = _connectionService.GetOrCreateConnection(ActiveConnectionId, "", "");
+                
+                // Створюємо об'єкт команди
                 var command = new ExecuteQueryCommand(connectionManager, query);
+                
                 StatusTextBlock.Text = "Виконується запит...";
+                
+                // Передаємо виконавцю
                 _queryExecutionService.Submit(command);
             }
             catch (Exception ex)
@@ -252,8 +306,13 @@ namespace SqlIdeProject
             }
         }
         
+        /// <summary>
+        /// Обробник події завершення запиту (Патерн Observer).
+        /// Оновлює UI та зберігає історію.
+        /// </summary>
         private void OnQueryExecutionCompleted(object? sender, QueryCompletedEventArgs e)
         {
+            // 1. Оновлення UI
             if (e.IsSuccess)
             {
                 ResultsDataGrid.ItemsSource = e.Result?.DefaultView;
@@ -267,6 +326,7 @@ namespace SqlIdeProject
             
             ThemeHelper.ApplyTheme(this, DarkThemeRadioButton.IsChecked == true ? "Dark" : "Light");
             
+            // 2. Збереження історії
             try
             {
                 var historyEntry = new QueryHistory
@@ -286,22 +346,22 @@ namespace SqlIdeProject
         
         private void HistoryButton_Click(object sender, RoutedEventArgs e)
         {
+            // Відкриваємо вікно історії
             QueryHistoryWindow historyWindow = new QueryHistoryWindow(_historyRepository);
             historyWindow.Owner = this; 
             historyWindow.ShowDialog();
         }
 
+        /// <summary>
+        /// Відкриває вікно для візуалізації схеми (Патерн Visitor / TreeView).
+        /// </summary>
         private void ShowSchemaButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                // Отримуємо поточне з'єднання
                 var connectionManager = _connectionService.GetOrCreateConnection(ActiveConnectionId, "", "");
-                
-                // Отримуємо схему
                 var schema = connectionManager.GetSchema();
                 
-                // ВІДКРИВАЄМО НОВЕ ВІКНО З ДЕРЕВОМ
                 var viewer = new SchemaViewerWindow(schema);
                 viewer.Owner = this;
                 viewer.ShowDialog();
@@ -312,13 +372,14 @@ namespace SqlIdeProject
             }
         }
 
+        /// <summary>
+        /// Відкриває вікно для порівняння двох схем.
+        /// </summary>
         private void CompareSchemasButton_Click(object sender, RoutedEventArgs e)
         {
-            // Відкриваємо вікно, де користувач сам вибере, що порівнювати
             var compareWindow = new SchemaCompareWindow();
             compareWindow.Owner = this;
             compareWindow.ShowDialog();
         }
-
     }
 }

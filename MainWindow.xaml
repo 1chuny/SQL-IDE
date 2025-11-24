@@ -75,10 +75,10 @@
             <avalonedit:TextEditor x:Name="QueryTextEditor" Grid.Row="1" Margin="0,5,0,0" Height="150" SyntaxHighlighting="SQL" ShowLineNumbers="True" FontFamily="Consolas" FontSize="14"/>
         </Grid>
          <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,185,0,0">
-            <Button x:Name="ExecuteQueryButton" Content="Виконати запит (SELECT)" Padding="10,5" Click="ExecuteQueryButton_Click"/>
+            <Button x:Name="ExecuteQueryButton" Content="Виконати запит" Padding="10,5" Click="ExecuteQueryButton_Click"/>
             <Button x:Name="ShowSchemaButton" Content="Показати схему" Margin="10,0,0,0" Padding="10,5" Click="ShowSchemaButton_Click"/>
-            <Button x:Name="CompareSchemasButton" Content="Порівняти схеми (Тест)" Margin="10,0,0,0" Padding="10,5" Click="CompareSchemasButton_Click"/>
-            <Button x:Name="HistoryButton" Content="Історія" Margin="10,0,0,0" Padding="10,5" Click="HistoryButton_Click" Background="#FFFBFFA5" />
+            <Button x:Name="CompareSchemasButton" Content="Порівняти схеми" Margin="10,0,0,0" Padding="10,5" Click="CompareSchemasButton_Click"/>
+            <Button x:Name="HistoryButton" Content="Історія" Margin="10,0,0,0" Padding="10,5" Click="HistoryButton_Click"  />
         </StackPanel>
 
         <DataGrid x:Name="ResultsDataGrid" Grid.Row="2" Margin="0,10,0,0" IsReadOnly="True"/>

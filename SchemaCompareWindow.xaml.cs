@@ -66,5 +66,39 @@ namespace SqlIdeProject
                 MessageBox.Show($"Помилка під час отримання схем: {ex.Message}\nПеревірте, чи доступні обидві бази даних.");
             }
         }
+		  private void ReportBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var p1 = ProfileCombo1.SelectedItem as ConnectionProfile;
+            var p2 = ProfileCombo2.SelectedItem as ConnectionProfile;
+
+            if (p1 == null || p2 == null) return;
+
+            try
+            {
+                //  Отримуємо схеми (так само, як і для дерев)
+                var manager1 = _connectionService.GetOrCreateConnection("compare_temp_1", p1.DatabaseType, p1.ConnectionString);
+                var schema1 = manager1.GetSchema();
+
+                var manager2 = _connectionService.GetOrCreateConnection("compare_temp_2", p2.DatabaseType, p2.ConnectionString);
+                var schema2 = manager2.GetSchema();
+
+                //  VISITOR
+                var visitor = new Patterns.Visitor.SchemaComparisonVisitor(schema2);
+                schema1.Accept(visitor);
+
+                // Показуємо результат
+                string report = "Знайдені відмінності:\n\n";
+                if (visitor.Differences.Count == 0)
+                    report += "Схеми ідентичні.";
+                else
+                    report += string.Join("\n", visitor.Differences);
+
+                MessageBox.Show(report, "Звіт Visitor");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Помилка: " + ex.Message);
+            }
+        }
     }
 }

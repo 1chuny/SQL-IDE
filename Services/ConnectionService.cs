@@ -65,5 +65,20 @@ namespace SqlIdeProject.Services
             _activeConnections[connectionId] = connectionManager;
             return connectionManager;
         }
+		  public void Disconnect(string connectionId)
+        {
+            if (_activeConnections.ContainsKey(connectionId))
+            {
+                // 1. Фізично закриваємо з'єднання
+                try 
+                { 
+                    _activeConnections[connectionId].Disconnect(); 
+                } 
+                catch { /* ігноруємо помилки при відключенні */ }
+
+                // 2. Видаляємо його зі списку пам'яті
+                _activeConnections.Remove(connectionId);
+            }
+        }
     }
 }

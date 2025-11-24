@@ -5,8 +5,11 @@
         Background="#2D2D30" WindowStartupLocation="CenterOwner">
     <Grid Margin="10">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/> <RowDefinition Height="*"/>    </Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> 
+            <RowDefinition Height="*"/>    
+        </Grid.RowDefinitions>
 
+        
         <Border Grid.Row="0" BorderBrush="Gray" BorderThickness="0,0,0,1" Padding="0,0,0,10" Margin="0,0,0,10">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -15,24 +18,34 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0">
+                <StackPanel Grid.Column="0" VerticalAlignment="Center">
                     <TextBlock Text="Оберіть Користувача 1 (Ліворуч):" Foreground="White" Margin="0,0,0,5"/>
                     <ComboBox x:Name="ProfileCombo1" DisplayMemberPath="ProfileName"/>
                 </StackPanel>
 
-                <Button Content="ПОРІВНЯТИ" Grid.Column="1" Width="100" Height="30" Margin="20,18,20,0" Click="CompareBtn_Click"/>
+         
+                <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center" Margin="20,0">
+                    
+                    <Button Content="ПОРІВНЯТИ" Width="140" Height="30" Margin="0,0,0,10" Click="CompareBtn_Click" FontWeight="Bold"/>
+                    
+                    
+                    <Button Content="Текстовий Звіт" Width="140" Height="30" Click="ReportBtn_Click"/>
+                </StackPanel>
+                
 
-                <StackPanel Grid.Column="2">
+                <StackPanel Grid.Column="2" VerticalAlignment="Center">
                     <TextBlock Text="Оберіть Користувача 2 (Праворуч):" Foreground="White" Margin="0,0,0,5"/>
                     <ComboBox x:Name="ProfileCombo2" DisplayMemberPath="ProfileName"/>
                 </StackPanel>
             </Grid>
         </Border>
 
+        
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="5"/> <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="5"/> 
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
             <TreeView x:Name="Tree1" Grid.Column="0" Background="#1E1E1E" BorderThickness="1" BorderBrush="#3E3E42"/>
